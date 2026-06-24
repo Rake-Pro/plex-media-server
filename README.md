@@ -26,13 +26,6 @@ result `ghcr.io/rake-pro/plex-media-server:<version>` and `:latest`.
 Auth uses the built-in `GITHUB_TOKEN` (`packages: write`) - **no registry
 secrets to configure**.
 
-### Package visibility
-
-The repo is public, but a freshly created GHCR package defaults to **private**.
-Either flip it to public (package -> Package settings -> Change visibility), or
-leave it private - the cluster pulls it with an `imagePullSecret` regardless
-(see the GitOps `ghcr-plex` ExternalSecret).
-
 ## Version bumps
 
 Renovate watches the Plex plexpass release feed (`renovate.json` ->
