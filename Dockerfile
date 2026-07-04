@@ -6,8 +6,8 @@ FROM docker.io/library/ubuntu:24.04
 ARG TARGETARCH=amd64
 ARG VENDOR="rakepro"
 # renovate: datasource=custom.plex depName=plex versioning=loose
-# https://downloads.plex.tv/plex-media-server-new/1.43.2.10687-563d026ea/debian/plexmediaserver_1.43.2.10687-563d026ea_amd64.deb
-ARG VERSION="1.43.2.10687-563d026ea"
+# https://downloads.plex.tv/plex-media-server-new/1.43.3.10793-cd55560bb/debian/plexmediaserver_1.43.3.10793-cd55560bb_amd64.deb
+ARG VERSION="1.43.3.10793-cd55560bb"
 
 
 # NVIDIA & Plex environment
