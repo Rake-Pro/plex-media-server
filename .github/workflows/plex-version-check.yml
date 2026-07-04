@@ -1,0 +1,95 @@
+name: Check Plex Version
+
+# Polls the Plex Pass (beta) download channel and opens a PR when a newer
+# Plex Media Server build is available. The beta channel only reveals newer
+# builds when the request is authenticated, so this needs a Plex Pass token
+# stored as the `PLEX_TOKEN` repository secret. Grab it from the Plex web app:
+# open any item -> Get Info -> View XML, and copy the `X-Plex-Token=` value.
+
+on:
+  schedule:
+    - cron: "0 7 * * *"   # daily at 07:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: plex-version-check
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve latest Plex Pass (beta) version
+        id: plex
+        env:
+          PLEX_TOKEN: ${{ secrets.PLEX_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${PLEX_TOKEN:-}" ]; then
+            echo "::error::PLEX_TOKEN secret is not set"; exit 1
+          fi
+
+          latest="$(curl -fsSL \
+            -H "X-Plex-Token: ${PLEX_TOKEN}" \
+            "https://plex.tv/api/downloads/5.json?channel=plexpass" \
+            | jq -r '.computer.Linux.version')"
+
+          if ! printf '%s' "$latest" | grep -Eq '^1\.[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]+$'; then
+            echo "::error::Unexpected version from Plex API: '$latest'"; exit 1
+          fi
+
+          current="$(sed -n 's/^ARG VERSION="\(1\.[0-9].*\)".*/\1/p' Dockerfile | head -n1)"
+          if [ -z "$current" ]; then
+            echo "::error::Could not parse current VERSION from Dockerfile"; exit 1
+          fi
+
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+          echo "latest=$latest"   >> "$GITHUB_OUTPUT"
+          if [ "$latest" = "$current" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Already on latest ($current)"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "Bump available: $current -> $latest"
+          fi
+
+      - name: Update Dockerfile
+        if: steps.plex.outputs.changed == 'true'
+        env:
+          LATEST: ${{ steps.plex.outputs.latest }}
+        run: |
+          set -euo pipefail
+          # Version pin.
+          sed -i -E "s|^(ARG VERSION=\")[^\"]+(\".*)$|\1${LATEST}\2|" Dockerfile
+          # Reference .deb URL in the comment directly above the pin.
+          sed -i -E "s|(plex-media-server-new/)[0-9a-f.-]+(/debian/plexmediaserver_)[0-9a-f.-]+(_amd64\.deb)|\1${LATEST}\2${LATEST}\3|" Dockerfile
+          git --no-pager diff -- Dockerfile
+
+      - name: Open pull request
+        if: steps.plex.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          base: main
+          branch: plex-bump/${{ steps.plex.outputs.latest }}
+          delete-branch: true
+          commit-message: "Bump Plex Media Server to ${{ steps.plex.outputs.latest }}"
+          title: "Bump Plex Media Server to ${{ steps.plex.outputs.latest }}"
+          body: |
+            Automated Plex Pass (beta) channel bump.
+
+            | | Version |
+            | --- | --- |
+            | Current | `${{ steps.plex.outputs.current }}` |
+            | Latest | `${{ steps.plex.outputs.latest }}` |
+
+            Source: `https://plex.tv/api/downloads/5.json?channel=plexpass`
+          labels: |
+            plex
+            automated

@@ -1,25 +1,4 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
-  "customManagers": [
-    {
-      "customType": "regex",
-      "description": "Bump Plex Media Server version pin (beta/plexpass channel)",
-      "fileMatch": ["^Dockerfile$"],
-      "matchStrings": [
-        "datasource=(?<datasource>custom\\.plex) depName=(?<depName>plex) versioning=(?<versioning>[a-z-]+)[\\s\\S]*?[\"=]\\s*\"?(?<currentValue>1\\.[0-9.]+-[0-9a-f]+)\"?"
-      ],
-      "datasourceTemplate": "{{{datasource}}}",
-      "versioningTemplate": "{{{versioning}}}"
-    }
-  ],
-  "customDatasources": {
-    "plex": {
-      "defaultRegistryUrlTemplate": "https://plex.tv/api/downloads/5.json?channel=plexpass",
-      "format": "json",
-      "transformTemplates": [
-        "{ \"releases\": [ { \"version\": computer.Linux.version } ] }"
-      ]
-    }
-  }
+  "extends": ["config:recommended"]
 }
