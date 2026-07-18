@@ -74,7 +74,7 @@ jobs:
 
       - name: Open pull request
         if: steps.plex.outputs.changed == 'true'
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v8
         with:
           base: main
           branch: plex-bump/${{ steps.plex.outputs.latest }}
