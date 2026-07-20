@@ -1,13 +1,13 @@
 # syntax=docker/dockerfile:1
 
-FROM docker.io/library/ubuntu:24.04
+FROM docker.io/library/ubuntu:26.04
 
 # Defaults for local builds; you can override with --build-arg
 ARG TARGETARCH=amd64
 ARG VENDOR="rakepro"
 # renovate: datasource=custom.plex depName=plex versioning=loose
-# https://downloads.plex.tv/plex-media-server-new/1.43.3.10793-cd55560bb/debian/plexmediaserver_1.43.3.10793-cd55560bb_amd64.deb
-ARG VERSION="1.43.3.10793-cd55560bb"
+# https://downloads.plex.tv/plex-media-server-new/1.43.3.10828-00f62d37d/debian/plexmediaserver_1.43.3.10828-00f62d37d_amd64.deb
+ARG VERSION="1.43.3.10828-00f62d37d"
 
 
 # NVIDIA & Plex environment
