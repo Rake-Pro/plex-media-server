@@ -11,9 +11,7 @@ on:
     - cron: "0 7 * * *"   # daily at 07:00 UTC
   workflow_dispatch: {}
 
-permissions:
-  contents: write
-  pull-requests: write
+permissions: {}
 
 concurrency:
   group: plex-version-check
@@ -21,6 +19,9 @@ concurrency:
 
 jobs:
   check:
+    permissions:
+      contents: write # push the bump branch
+      pull-requests: write # open the bump PR
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
