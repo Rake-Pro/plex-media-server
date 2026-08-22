@@ -56,7 +56,9 @@ RUN \
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
     apt-get autoremove -y && \
     apt-get clean && \
-    rm -rf /etc/default/plexmediaserver /tmp/* /var/lib/apt/lists/* /var/tmp/
+    rm -rf /etc/default/plexmediaserver /tmp/* /var/lib/apt/lists/* /var/tmp/ && \
+    # pebble is an unpackaged Go binary baked into the ubuntu base image; unused here (catatonit is PID 1)
+    rm -f /usr/bin/pebble
 
 # Copy entrypoint with an explicit executable mode so the bit can never be
 # lost in git/checkout (the old image shipped it 644 -> catatonit EACCES).
