@@ -31,6 +31,9 @@ ARG TARGETARCH=amd64
 
 RUN \
     apt-get update && \
+    # Pull distro security updates for the pinned ubuntu:26.04 layer (Trivy
+    # rescan 2026-10-05: openssl 3.5.5-1ubuntu3.5 -> 3.5.5-1ubuntu3.6).
+    apt-get upgrade -y && \
     apt-get install -y --no-install-recommends --no-install-suggests \
         bash \
         ca-certificates \
