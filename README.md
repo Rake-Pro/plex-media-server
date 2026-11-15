@@ -26,7 +26,8 @@ ghcr.io/rake-pro/plex-media-server
   (CRITICAL+HIGH) so CVEs disclosed after release still surface; it does not
   rebuild or push anything.
 - `plex-version-check.yml` polls the Plex Pass (beta) download channel daily
-  and opens a PR into `dev` bumping the pinned `VERSION` build arg when a
+  and opens a PR into `dev` bumping the pinned `VERSION` build arg, together
+  with the package SHA-256 in `PLEX_SHA256_AMD64` (checked before install), when a
   newer build is available (requires a `PLEX_TOKEN` repository secret).
 - Pin `X.Y.Z` in deployments; `latest` is a convenience pointer.
 

@@ -8,6 +8,10 @@ ARG VENDOR="rakepro"
 # renovate: datasource=custom.plex depName=plex versioning=loose
 # https://downloads.plex.tv/plex-media-server-new/1.43.5.11079-b3b13e506/debian/plexmediaserver_1.43.5.11079-b3b13e506_amd64.deb
 ARG VERSION="1.43.5.11079-b3b13e506"
+# SHA-256 of the amd64 package for VERSION, checked before dpkg -i. The bump
+# workflow rewrites it together with VERSION. An empty value skips the check
+# with a warning (for local builds of another VERSION or architecture).
+ARG PLEX_SHA256_AMD64="74e9a71c97e06d6e925cc4398279141fd838ee9df446f90e769614fa2c87a206"
 
 
 # NVIDIA & Plex environment
@@ -54,6 +58,15 @@ RUN \
     fi && \
     curl -fsSL -o /tmp/plex.deb \
         "https://downloads.plex.tv/plex-media-server-new/${VERSION}/debian/plexmediaserver_${VERSION}_${TARGETARCH}.deb" && \
+    case "${TARGETARCH}" in \
+        amd64) plex_sha256="${PLEX_SHA256_AMD64}" ;; \
+        *) plex_sha256="" ;; \
+    esac && \
+    if [ -n "${plex_sha256}" ]; then \
+        echo "${plex_sha256}  /tmp/plex.deb" | sha256sum -c -; \
+    else \
+        echo "WARNING: no PLEX_SHA256 for ${TARGETARCH}; Plex package checksum NOT verified" >&2; \
+    fi && \
     dpkg -i /tmp/plex.deb && \
     chmod -R 755 "${PLEX_MEDIA_SERVER_HOME}" && \
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
