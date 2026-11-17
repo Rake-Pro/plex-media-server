@@ -44,8 +44,10 @@ jobs:
             "https://plex.tv/api/downloads/5.json?channel=plexpass" \
             | jq -r '.computer.Linux.version')"
 
-          if ! printf '%s' "$latest" | grep -Eq '^1\.[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]+$'; then
-            echo "::error::Unexpected version from Plex API: '$latest'"; exit 1
+          # Anchored on the whole value (grep would accept a multi-line answer
+          # if any one line matched); it then reaches sed, outputs and the PR.
+          if ! [[ "$latest" =~ ^1\.[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]+$ ]]; then
+            echo "::error::Unexpected version from Plex API"; exit 1
           fi
 
           current="$(sed -n 's/^ARG VERSION="\(1\.[0-9].*\)".*/\1/p' Dockerfile | head -n1)"
@@ -64,13 +66,26 @@ jobs:
           fi
 
       - name: Update Dockerfile
+        id: bump
         if: steps.plex.outputs.changed == 'true'
         env:
           LATEST: ${{ steps.plex.outputs.latest }}
         run: |
           set -euo pipefail
-          # Version pin.
+          # Hash the new amd64 package so the PR carries it next to the version.
+          curl -fsSL -o "$RUNNER_TEMP/plex.deb" \
+            "https://downloads.plex.tv/plex-media-server-new/${LATEST}/debian/plexmediaserver_${LATEST}_amd64.deb"
+          sha256="$(sha256sum "$RUNNER_TEMP/plex.deb" | cut -d' ' -f1)"
+          if ! [[ "$sha256" =~ ^[0-9a-f]{64}$ ]]; then
+            echo "::error::Could not hash the Plex package"; exit 1
+          fi
+          echo "sha256=$sha256" >> "$GITHUB_OUTPUT"
+          # Version pin and package hash.
           sed -i -E "s|^(ARG VERSION=\")[^\"]+(\".*)$|\1${LATEST}\2|" Dockerfile
+          sed -i -E "s|^(ARG PLEX_SHA256_AMD64=\")[^\"]*(\".*)$|\1${sha256}\2|" Dockerfile
+          if ! grep -q "^ARG PLEX_SHA256_AMD64=\"${sha256}\"" Dockerfile; then
+            echo "::error::Could not write PLEX_SHA256_AMD64 in Dockerfile"; exit 1
+          fi
           # Reference .deb URL in the comment directly above the pin.
           sed -i -E "s|(plex-media-server-new/)[0-9a-f.-]+(/debian/plexmediaserver_)[0-9a-f.-]+(_amd64\.deb)|\1${LATEST}\2${LATEST}\3|" Dockerfile
           git --no-pager diff -- Dockerfile
@@ -91,6 +106,8 @@ jobs:
             | --- | --- |
             | Current | `${{ steps.plex.outputs.current }}` |
             | Latest | `${{ steps.plex.outputs.latest }}` |
+
+            amd64 package SHA-256 (computed by this workflow, checked at build time): `${{ steps.bump.outputs.sha256 }}`
 
             Source: `https://plex.tv/api/downloads/5.json?channel=plexpass`
           labels: |
