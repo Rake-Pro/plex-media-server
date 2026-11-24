@@ -6,12 +6,12 @@ FROM docker.io/library/ubuntu:26.04
 ARG TARGETARCH=amd64
 ARG VENDOR="rakepro"
 # renovate: datasource=custom.plex depName=plex versioning=loose
-# https://downloads.plex.tv/plex-media-server-new/1.43.6.11100-5215553a5/debian/plexmediaserver_1.43.6.11100-5215553a5_amd64.deb
-ARG VERSION="1.43.6.11100-5215553a5"
+# https://downloads.plex.tv/plex-media-server-new/1.43.6.11212-fa660d0cd/debian/plexmediaserver_1.43.6.11212-fa660d0cd_amd64.deb
+ARG VERSION="1.43.6.11212-fa660d0cd"
 # SHA-256 of the amd64 package for VERSION, checked before dpkg -i. The bump
 # workflow rewrites it together with VERSION. An empty value skips the check
 # with a warning (for local builds of another VERSION or architecture).
-ARG PLEX_SHA256_AMD64="4a82556274d05401b7724e49602fd4d3c7d3483c95aa2c600708561ed2f9d71f"
+ARG PLEX_SHA256_AMD64="bffcc665d3f9d341ab7b46110f26670c56d1bcdf28036a70d1e84c331fe1db65"
 
 
 # NVIDIA & Plex environment
